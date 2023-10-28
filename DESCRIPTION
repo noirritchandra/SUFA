@@ -1,0 +1,22 @@
+Package: SUFA
+Type: Package
+Title: SUbspace Factor Analysis Model
+Version: 1.0
+Date: 2023-10-17
+Author: Who wrote it
+Encoding: UTF-8
+Maintainer: Who to complain to <yourfault@somewhere.net>
+Description: More about what it does (maybe more than one line)
+License: What license is it under?
+Imports: Rcpp (>= 1.0.7), irlba, ggplot2, plyr, dplyr, infinitefactor, abind, mvtnorm, raster,ggpubr,
+  Rdpack, rbenchmark, BiocManager, cluster, circlize, forcats, viridis, reshape2
+LinkingTo: Rcpp, RcppArmadillo, RcppGSL
+RdMacros: Rdpack
+RoxygenNote: 7.2.3
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
+Depends: 
+    R (>= 2.10)
+LazyData: true
