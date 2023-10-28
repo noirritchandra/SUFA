@@ -1,0 +1,28 @@
+#' Gene expression datasets from the Immgen project
+#' 
+#'  
+#' We integrate data from three studies analyzing gene expressions. 
+#' The first is the GSE109125 bulkRNAseq dataset, collected from 103 highly purified immunocyte populations representing all lineages and several differentiation cascades and profiled using the ImmGen  pipeline \insertCite{bulk_train}{SUFA}. 
+#' The second study is  a microarray dataset GSE15907 \insertCite{micro1_train1,micro1_train2}{SUFA}, measured on multiple \emph{ex-vivo} immune lineages, primarily from adult B6 male mice. 
+#' Finally, we include the GSE37448 \insertCite{micro2_train}{SUFA} microarray dataset, also  part of the Immgen project. 
+#' 
+#' @name genedata
+#' @docType data
+#' @format A \code{list} with the following elements:
+#' \describe{
+#' \item{bulk}{The GSE109125 bulkRNASeq data in gene x cell format}
+#' \item{array1}{First microarray dataset GSE15907 data in gene x cell format}
+#' \item{array2}{Second microarray dataset GSE37448 data in gene x cell format}
+#' \item{bulk.types}{A string vector indicating the cell-types in the bulkRNASeq data}
+#' \item{array1.types}{A string vector indicating the cell-types in the first microarray data}
+#' \item{array2.types}{A string vector indicating the cell-types in the second microarray data}
+#' }
+#' 
+#' @source {GSE109125, GSE15907 and GSE37448}
+#' @note In these datasets, we only include those cell-types with at least 3 observations. We have also \code{log2}-transformed the original expression-count data.
+#' @references
+#' \insertAllCited{}
+#' @examples
+#' data(genedata)
+#' names(genedata)
+"genedata"
