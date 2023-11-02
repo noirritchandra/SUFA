@@ -286,7 +286,7 @@ SUFA_shared_covmat=function(res,burn=5e2){
 #'
 #' @param lam_array An array of MCMC samples of the loading matrix. The MCMC samples MUST be stored along the third dimension.
 #' @param burn Number of burnin samples to discard.
-#' @param alpha The elements of the loading matrices are coded as 0 if their respective (1-\code{alpha})\% posterior credible intervals (after fixing for rotational ambiguity) include 0.
+#' @param alpha The elements of the loading matrices are coded as 0 if their respective 100(1-\code{alpha})\% posterior credible intervals (after fixing for rotational ambiguity) include 0.
 #'
 #' @return A point estimate matrix 
 #' @export 
@@ -311,7 +311,7 @@ lam.est=function(lam_array, burn=5e2,alpha=.05){
 #'
 #' @param res Output of \code{\link{fit_SUFA}}.
 #' @param burn Number of burnin samples to discard.
-#' @param alpha The elements of the loading matrices are coded as 0 if their respective (1-\code{alpha})\% posterior credible intervals (after fixing for rotational ambiguity) include 0.
+#' @param alpha The elements of the loading matrices are coded as 0 if their respective 100(1-\code{alpha})\% posterior credible intervals (after fixing for rotational ambiguity) include 0.
 #'
 #' @return A list with the following elements:
 #' \describe{

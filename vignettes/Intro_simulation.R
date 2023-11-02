@@ -10,8 +10,9 @@ set.seed(35)
 ## ----load_SUFA----------------------------------------------------------------
 library(SUFA)
 
-## ----load_R_funcs-------------------------------------------------------------
-source("simulate_data_fxns.R") #We load some R functions
+## ----load_R_funcs, message=FALSE, results=FALSE, warning=FALSE, comment=FALSE----
+library(here)
+source(here("vignettes","simulate_data_fxns.R")) #We load some R functions
 
 ## ----set_dimension------------------------------------------------------------
 S=5 ## no. of studies

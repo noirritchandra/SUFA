@@ -11,7 +11,7 @@ lam.est.all(res, burn = 500, alpha = 0.05)
 
 \item{burn}{Number of burnin samples to discard.}
 
-\item{alpha}{The elements of the loading matrices are coded as 0 if their respective (1-\code{alpha})\% posterior credible intervals (after fixing for rotational ambiguity) include 0.}
+\item{alpha}{The elements of the loading matrices are coded as 0 if their respective 100(1-\code{alpha})\% posterior credible intervals (after fixing for rotational ambiguity) include 0.}
 }
 \value{
 A list with the following elements:
