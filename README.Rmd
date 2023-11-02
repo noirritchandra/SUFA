@@ -1,0 +1,64 @@
+---
+output: github_document
+bibliography: inst/REFERENCES.bib
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# SUFA
+
+A `C++`-based implementation of the SUbspace Factor Analysis (SUFA) model by @chandra2023sufa.
+
+<!-- badges: start -->
+
+<!-- badges: end -->
+
+## Installation
+
+The package has been tried and tested in Ubuntu and macOS.
+
+### Required UNIX Packages
+
+-   `libgsl`
+
+-   `openmp`
+
+-   `R (>= 4.3.1)`
+
+### Installation from Github
+
+You can install the development version of SUFA from [GitHub](https://github.com/) with:
+
+``` {r eval=F}
+install.packages("devtools")
+devtools::install_github("noirritchandra/SUFA", build_vignettes = TRUE)
+```
+
+Must set `build_vignettes = TRUE` to install the vignette files containing illustrations. 
+However, this may take considerably more time to install the package.
+
+## Simulation Example
+
+Refer to the following vignette for illustrations in simulated examples:
+
+```{r sim_example, eval=FALSE}
+vignette(topic="Intro_simulation",package = "SUFA")
+```
+
+
+## Genedata Application
+
+Refer to the following vignette in gene expressions datasets for inference on gene networks:
+
+```{r genedata, eval=FALSE}
+vignette(topic="Genedata_application",package = "SUFA")
+```

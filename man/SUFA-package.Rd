@@ -13,7 +13,7 @@
 The DESCRIPTION file:
 \packageDESCRIPTION{SUFA}
 \packageIndices{SUFA}
-~~ An overview of how to use the package, including the most important functions ~~
+A fast \code{C++} based implementation of the SUbspace factor analysis model by  \insertCite{chandra2023sufa;textual}{SUFA}. The Hamiltonian Monte Carlo with Gibbs sampler described is implemented as decribed in the article.
 }
 \author{
 \packageAuthor{SUFA}
@@ -21,15 +21,9 @@ The DESCRIPTION file:
 Maintainer: \packageMaintainer{SUFA}
 }
 \references{
-~~ Literature or other references for background information ~~
+\insertAllCited{}
 }
-~~ Optionally other standard keywords, one per line, from file KEYWORDS in the R ~~
-~~ documentation directory ~~
-\keyword{ package }
-\seealso{
-~~ Optional links to other man pages, e.g. ~~
-~~ \code{\link[<pkg>:<pkg>-package]{<pkg>}} ~~
-}
+\keyword{ SUFA }
 \examples{
-~~ simple examples of the most important functions ~~
+## See the vignettes included in this package.
 }
