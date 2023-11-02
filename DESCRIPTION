@@ -1,7 +1,7 @@
 Package: SUFA
 Type: Package
 Title: SUbspace Factor Analysis Model
-Version: 1.0
+Version: 1.0.1
 Date: 2023-10-17
 Author: Noirrit Kiran Chandra
 Encoding: UTF-8
