@@ -52,7 +52,7 @@ n=d;ns=sapply(rpois(S,n/S),max,n/S) ## sample-sizes in each study
 
 We ensure at least $n_{s}\geq \frac {d} {S}$ for all $s=1,\dots,S$.
 
-Next we randomly sample the dimensions of the study-specific latent factors $(q_{s})$ while ensuring that $q\leq q_{s} \leq \frac{q}{S}$:
+Next we randomly sample the dimensions of the study-specific latent factors $(q_{s})$ while ensuring that $q_{s} \leq \frac{q}{S}$:
 
 ```{r set_dimension_latent}
 qs=sapply(rpois(S,floor(q/S))+1,min,floor(q/S))
