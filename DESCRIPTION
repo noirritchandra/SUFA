@@ -8,7 +8,7 @@ Encoding: UTF-8
 Maintainer: Noirrit Kiran Chandra <noirritchandra@gmail.com>
 Description: Implements the SUbspace Factor Analysis Model (SUFA) for inferring covariance structure from multiple data sources.
 License: What license is it under?
-Imports: Rcpp (>= 1.0.7), irlba, ggplot2, plyr, dplyr, infinitefactor, abind, mvtnorm, raster,ggpubr,
+Imports: Rcpp (>= 1.0.7), here,irlba, ggplot2, plyr, dplyr, infinitefactor, abind, mvtnorm, raster,ggpubr,
   Rdpack, rbenchmark, BiocManager, cluster, circlize, forcats, viridis, reshape2
 LinkingTo: Rcpp, RcppArmadillo, RcppGSL
 RdMacros: Rdpack

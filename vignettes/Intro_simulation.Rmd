@@ -33,8 +33,10 @@ Load `SUFA`
 library(SUFA)
 ```
 
+
 ```{r load_R_funcs}
-source("simulate_data_fxns.R") #We load some R functions
+library(here)
+source(here("vignettes","simulate_data_fxns.R")) #We load some R functions
 ```
 
 ## Set the Number of Studies, Dimensions and Sample Sizes
