@@ -3,6 +3,7 @@
 .RData
 .rda
 .Ruserdata
+README.Rmd
 src/*.o
 src/*.so
 src/*.dll
