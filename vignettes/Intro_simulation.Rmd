@@ -34,7 +34,7 @@ library(SUFA)
 ```
 
 
-```{r load_R_funcs}
+```{r load_R_funcs, message=FALSE, results=FALSE, warning=FALSE, comment=FALSE}
 library(here)
 source(here("vignettes","simulate_data_fxns.R")) #We load some R functions
 ```
