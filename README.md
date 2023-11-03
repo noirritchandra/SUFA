@@ -13,9 +13,7 @@ model by Chandra, Dunson, and Xu (2023).
 
 The package has been tried and tested in Ubuntu and macOS.
 
-### Required UNIX Packages
-
-- `libgsl`
+### Required System Packages
 
 - `openmp`
 

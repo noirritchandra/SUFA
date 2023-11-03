@@ -1,14 +1,9 @@
 #include <RcppArmadillo.h>
-#include <RcppGSL.h>
 #include <sstream>
 #include <iostream>
 #include <fstream>
 #include<omp.h>
-#include<gsl/gsl_math.h>
-#include<gsl/gsl_rng.h>
-#include<gsl/gsl_randist.h>
 // [[Rcpp::depends(RcppArmadillo)]]
-// [[Rcpp::depends(RcppGSL)]]
 // [[Rcpp::plugins(cpp17)]]
 // [[Rcpp::plugins(openmp)]]
 
@@ -31,8 +26,6 @@ struct hyperparams{
   arma::mat Phi;
 };
 
-// using namespace Rcpp;
-
 
 void copy_theta(const theta &src,theta &dest){
   dest.Phi=src.Phi;
@@ -51,8 +44,8 @@ double theta_ssq(const theta &x){
 double rig(double mu){
   double y = randn<double>();
   y *= y;
-  double mu2 = gsl_pow_2(mu);
-  double quad = 4 * mu * y + mu2 * gsl_pow_2(y);
+  double mu2 = pow(mu,2); //gsl_pow_2(mu);
+  double quad = 4 * mu * y + mu2 * pow(y,2);
   // double x = mu + y * mu2 / 2 - mu / 2  * sqrt(quad);
   double  x_div_mu=(2+mu*y - sqrt(quad) )/2;
   double  x = (mu* x_div_mu);
@@ -532,7 +525,7 @@ double _gig_mode(double lambda, double omega)
 
     // --- UPDATE PHI --- //
     T_phi=abs_theta;
-    T_phi.transform( [&a](double val) { double tmp=rgig(a-1, 2* val, 1); return(  GSL_MAX_DBL(tmp,9e-6)) ; } );
+    T_phi.transform( [&a](double val) { double tmp=rgig(a-1, 2* val, 1); return(  std::max(tmp,9e-6)) ; } );
     T_sum=accu(T_phi);
     if(T_sum<1){
       T_phi/=T_sum;
@@ -556,7 +549,7 @@ double _gig_mode(double lambda, double omega)
 
 
     // --- UPDATE PLAM --- //
-    temp=gsl_pow_2(T_sum/tau);
+    temp=pow(T_sum/tau,2);//gsl_pow_2(T_sum/tau);
     arma::mat Plam= ( temp*(psi_inv/square(T_phi)));
     Plam.transform( [](double val) { return ( val/(1+tolr*val) ); } );
     // cout<<"Plam updated; accu_plam"<<accu(Plam) <<endl;
@@ -591,7 +584,7 @@ double _gig_mode(double lambda, double omega)
 
     // --- UPDATE PHI --- //
     T_phi=abs_theta;
-    T_phi.transform( [&a](double val) { double tmp=rgig(a-1, 2* val, 1); return(  GSL_MAX_DBL(tmp,9e-6)) ; } );
+    T_phi.transform( [&a](double val) { double tmp=rgig(a-1, 2* val, 1); return(  std::max(tmp,9e-6)) ; } );
 
     if(T_phi.has_nan()){
       T_phi.print("T_phi :");
@@ -949,10 +942,10 @@ double _gig_mode(double lambda, double omega)
     unsigned acceptance=0; double acpt_prob;
 
     arma::vec ps(p,fill::zeros), sig_param(2);
-    sig_param(1)=log1p(ss/gsl_pow_2(ms));sig_param(0)=log(ms)-sig_param(1)/2;
+    sig_param(1)=log1p(ss/pow(ms,2));sig_param(0)=log(ms)-sig_param(1)/2;
 
     arma::mat T_phi = randg<arma::mat>( p, k, distr_param(a,0.5) );
-    T_phi.transform( [](double val) { return(  GSL_MAX_DBL(val,9e-17)) ; } );
+    T_phi.transform( [](double val) { return(  std::max(val,9e-17)) ; } );
 
     //--- Initiate PLAM --- //
     arma::mat Plam= (1/square(T_phi));
@@ -1011,8 +1004,8 @@ double _gig_mode(double lambda, double omega)
       arma::mat del_v_lam; arma::vec del_v_ps;
       del_v_sig(phimat_new, ps_new, Plam, S, del_inv_S, n, del_v_lam, del_v_ps, sig_param);
 
-      unsigned nstep=GSL_MAX_INT(1,R::rpois(nleapfrog));
-      double delta= R::runif(del_range(0),del_range(1) );
+      unsigned nstep=std::max(1,(int) R::rpois(nleapfrog));
+      double delta= randu( distr_param(del_range(0),del_range(1)) );// R::runif(del_range(0),del_range(1) );
       leapfrog_sig(nstep, delta,phimat_new, p_lam,p_sig, ps_new, S, n, del_inv_S,Plam, del_v_lam, del_v_ps, sig_param);
 
       H_prior_old=  dot(square(phimat) ,Plam)/2;
@@ -1043,11 +1036,11 @@ double _gig_mode(double lambda, double omega)
         Rcpp::Rcout<<"Acceptance probability="<<acpt_prob<<" #acceptance= "<<acceptance<<" delta="<<delta<<" nleapfrog= "<<nleapfrog<<endl;
         if(acpt_prob<.5){
           --nleapfrog;
-          nleapfrog=GSL_MAX_INT(leapmin,nleapfrog);
+          nleapfrog=std::max(leapmin,nleapfrog);
         }
         if(acpt_prob>.85){
           ++nleapfrog;
-          nleapfrog=GSL_MIN_INT(leapmax,nleapfrog);
+          nleapfrog=std::min(leapmax,nleapfrog);
         }
 
         // sigma_diag_file<<exp(ps.t());
@@ -1139,7 +1132,7 @@ double _gig_mode(double lambda, double omega)
     arma::vec ps(p,fill::ones), ps_MC(p,fill::zeros); //Diagonal variance parameters
 
     arma::mat T_phi = randg<arma::mat>( p, k, distr_param(a,0.5) );
-    T_phi.transform( [](double val) { return(  GSL_MAX_DBL(val,9e-17)) ; } );
+    T_phi.transform( [](double val) { return(  std::max(val,9e-17)) ; } );
     double T_sum=accu(T_phi);
     if(T_sum<1){
       T_phi/=T_sum;
@@ -1166,19 +1159,6 @@ double _gig_mode(double lambda, double omega)
       (l_s_mc[j]).zeros(ns(j),ks(j),n_mc);
     }
 
-
-    ///// Setting-up GSL random number generator for sampling from dirichlet
-    const gsl_rng_type * T;
-    gsl_rng * r;
-
-    /* create a generator chosen by the
-     environment variable GSL_RNG_TYPE */
-
-    gsl_rng_env_setup();
-
-    T = gsl_rng_default;
-    r = gsl_rng_alloc (T);
-    gsl_rng_set(r,500);
 
     ///////////////////////////////////////////////////////////////////
 
@@ -1261,10 +1241,6 @@ double _gig_mode(double lambda, double omega)
 
 
     // delete[] inds_eq_j;
-    gsl_rng_free (r);
-
-    // sigma_diag_file.close();
-
 
     delete[] T_phis;
     delete[] Lambda;
@@ -1296,7 +1272,7 @@ double _gig_mode(double lambda, double omega)
     arma::vec ps(p,fill::ones);
 
     arma::mat T_phi = randg<arma::mat>( p, k, distr_param(a,0.5) );
-    T_phi.transform( [](double val) { return(  GSL_MAX_DBL(val,9e-17)) ; } );
+    T_phi.transform( [](double val) { return(  std::max(val,9e-17)) ; } );
     double T_sum=accu(T_phi);
     if(T_sum<1){
       T_phi/=T_sum;
@@ -1390,7 +1366,7 @@ double _gig_mode(double lambda, double omega)
     if(col_prob<=0 || col_prob>1)
       Rcpp::stop("Enter valid proportion of columns to update!");
     // unsigned k_eff= GSL_MAX_INT (ceil(k*col_prob),1);
-    const unsigned k_eff= (col_prob==1.0) ? k:GSL_MAX_INT (ceil(k*col_prob),1);
+    const unsigned k_eff= (col_prob==1.0) ? k: (std::max ((int) ceil(k*col_prob),1));
     Rcpp::Rcout<< "k_eff="<<k_eff<<endl;
 
     params.Phi=phi_init;
@@ -1401,7 +1377,7 @@ double _gig_mode(double lambda, double omega)
     hyper.ps.set_size(2);
 
     // sig_param(1)=log1p(ss/gsl_pow_2(ms));sig_param(0)=log(ms)-sig_param(1)/2;
-    hyper.ps(1)=log1p(ps_hyper(1) /gsl_pow_2(ps_hyper(0)));hyper.ps(0)=log(ps_hyper(0))-hyper.ps(1)/2;
+    hyper.ps(1)=log1p(ps_hyper(1) /pow(ps_hyper(0),2));hyper.ps(0)=log(ps_hyper(0))-hyper.ps(1)/2;
     hyper.A=A_hyper;
 
     double H_ll_new, H_ll_old=accu(square(params.ps-hyper.ps(0)))/(2*hyper.ps(1))  , H_prior_new, H_prior_old ;
@@ -1421,7 +1397,7 @@ double _gig_mode(double lambda, double omega)
     unsigned acceptance=0; double acpt_prob;
 
     arma::mat T_phi = randg<arma::mat>( p, k, distr_param(a,0.5) );
-    T_phi.transform( [](double val) { return(  GSL_MAX_DBL(val,9e-17)) ; } );
+    T_phi.transform( [](double val) { return(  std::max(val,9e-17)) ; } );
 
     //--- Initiate PLAM --- //
     hyper.Phi= (1/square(T_phi));
@@ -1506,11 +1482,11 @@ double _gig_mode(double lambda, double omega)
       if(remainder==0 ){
         if(acpt_prob<.5){
           --nleapfrog;
-          nleapfrog=GSL_MAX_INT(leapmin,nleapfrog);
+          nleapfrog=std::max(leapmin,nleapfrog);
         }
         if(acpt_prob>.85){
           ++nleapfrog;
-          nleapfrog=GSL_MIN_INT(leapmax,nleapfrog);
+          nleapfrog=std::min(leapmax,nleapfrog);
         }
 
         /*if(acpt_prob<.3){

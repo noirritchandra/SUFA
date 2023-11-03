@@ -26,9 +26,7 @@ A `C++`-based implementation of the SUbspace Factor Analysis (SUFA) model by @ch
 
 The package has been tried and tested in Ubuntu and macOS.
 
-### Required UNIX Packages
-
--   `libgsl`
+### Required System Packages
 
 -   `openmp`
 
