@@ -1,6 +1,6 @@
 # SUFA 1.1.0
 
-* Removed gsl.
+* Removed dependency on gsl.
 
 # SUFA 1.0.2
 
