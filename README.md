@@ -29,9 +29,10 @@ install.packages("devtools")
 devtools::install_github("noirritchandra/SUFA", build_vignettes = TRUE)
 ```
 
-Must set `build_vignettes = TRUE` to install the vignette files
-containing illustrations. However, this may take considerably more time
-to install the package.
+Setting `build_vignettes = F` leads to considerably faster installation
+but without any vignette. To install the vignette files containing
+illustrations, one must set `build_vignettes = TRUE`. However, this may
+take considerably more time to install the package.
 
 ## Simulation Example
 
