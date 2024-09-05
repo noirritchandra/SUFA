@@ -1,7 +1,8 @@
 # SUFA 2.0.0
 
-* Moved the gene xpression datasets to remote locations. 
+* Moved gene expression datasets to remote location. 
 * Added `fit_FA` function to fit a HMC-based sparse factor model.
+* Added vignette for Bayesian sparse factor models.
 * Bug fixes.
 
 # SUFA 1.1.0
