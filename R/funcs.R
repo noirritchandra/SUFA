@@ -1,8 +1,8 @@
-spca=function(Y,nv=50,pr=.9){
+spca=function(Y,nv=35,pr=.9){
   pca.results=irlba::irlba(Y,nv=min(nv,nrow(Y)-1, ncol(Y)-1))
   cum_eigs= cumsum(pca.results$d)/sum(pca.results$d)
 
-  d=raster::clamp(min(which(cum_eigs>pr)),2,35)
+  d=raster::clamp(min(which(cum_eigs>pr)),2,nv)
 
   eta= pca.results$u [,1:d]%*% diag(pca.results$d [1:d])
   lambda=pca.results$v[,1:d]
@@ -96,8 +96,6 @@ initiate_MSFA=function(...,nv=50,ds=25,pr=.9,do.scale=T,do.center=F){
 #'
 #' @return An array with the marginal covariance matrices in the studies concatenated across the third dimension.
 #' @export
-#'
-#' @examples
 sufa_marginal_covs=function(res,burn=5e2){
   # imsfa_marginal_covs=function(res,burn=5e2){
   library(plyr); library(abind)
@@ -273,8 +271,6 @@ shared_covmat=function(phi, resids,burn=5e2){
 #'
 #' @return A matrix representing the posterior mean of \eqn{\mathbf{\Sigma}=\mathbf{\Lambda}\mathbf{\Lambda}^{T}+\mathbf{\Delta}}.
 #' @export
-#'
-#' @examples
 SUFA_shared_covmat=function(res,burn=5e2){
   shared_covmat(res$Lambda,res$residuals,burn=burn)
 }
@@ -319,8 +315,6 @@ lam.est=function(lam_array, burn=5e2,alpha=.05){
 #' \item{\code{Study_specific}}{A list comprising the point estimates of the study specific loading matrices \eqn{\mathbf{\Lambda A}_s}.}
 #' }
 #' @export 
-#'
-#' @examples
 lam.est.all=function(res, burn=5e2,alpha=.05){
   # n.cores=round(n.cores)
   # if(n.cores<1)
@@ -421,7 +415,9 @@ get_latent_factors=function(res, Y, burn=500){
 #' \item{\code{acceptance_probability}}{The acceptance probability of the HMC-within-Gibbs sampler.}
 #' }
 #' @export
-fit_SUFA=function(Y,qmax,a=0.5, bAs=1, ms=1,ss=7, nthreads,
+#' @examples
+#' vignette(topic="Intro_simulation",package = "SUFA")
+fit_SUFA=function(Y,qmax,a=0.5, bAs=1, ms=1,ss=7, nthreads=6,
                    nrun=7.5e3, thin=5,
                   nleapfrog=6,leapmax=10,del_range=c(.001,.0075),col_prop=1){
 
@@ -434,10 +430,51 @@ fit_SUFA=function(Y,qmax,a=0.5, bAs=1, ms=1,ss=7, nthreads,
   Phi.init=init.vals$lambda
   #################################################
 
-
-  res<-SUFA_HMC(nrun=nrun, thin=thin, nleapfrog=nleapfrog,del_range=del_range,
+  RcppArmadillo::armadillo_set_number_of_omp_threads(nthreads);
+  SUFA_HMC(nrun=nrun, thin=thin, nleapfrog=nleapfrog,del_range=del_range,
                                       ps_hyper=c(ms,ss),  A_hyper=c(0,bAs), a=a,
                                       Y, ks = ds_est, Phi.init,leapmax=leapmax,leapmin=5,col_prob=col_prop ,nthreads = min(nstudy,nthreads) )
+}
+
+#' Fit a Bayesian sparse factor analysis model
+#'
+#' A fast Hamiltonian Monte Carlo-based sparse Bayesian factor model implementation
+#'\deqn{Y_{i}\sim \mathrm{N} (0, \mathbf{\Lambda}\mathbf{\Lambda}^{T}+\mathbf{\Delta}) \text{ where } \mathrm{diag}(\mathbf{\Delta})=(\delta_{1}^{2},\dots,\delta_{d}^{2})^{T}}
+#'\deqn{\mathrm{vectorise}(\mathbf{\Lambda})\sim \mathrm{Dirichlet-Laplace}(a), }
+#'\deqn{\log\delta_{j}^{2} \sim \mathrm{N}(\mu_{\delta},\sigma_{\delta}^{2}), } such that \eqn{\mu_{\delta}} and \eqn{\sigma_{\delta}^{2}} are chosen such that a priori \eqn{E(\delta_{j}^{2})=}\code{ms} and \eqn{\mathrm{var}(\delta_{j}^{2})=}\code{ss} for all \eqn{j=1,\dots,d}.
+#'
+#' @param Y Data matrix
+#' @param qmax Maximum allowed column dimension of the factor loading matrix.
+#' @param a Dirichlet-Laplace shrinkage parameter.
+#' @param ms Prior expectation of the idiosyncratic variance parameters \eqn{\delta_{j}^{2}}'s for all \eqn{j=1,\dots,d}.
+#' @param ss Prior variance of the idiosyncratic variance parameters \eqn{\delta_{j}^{2}}'s for all \eqn{j=1,\dots,d}.
+#' @param nrun Number of MCMC iterations to perform.
+#' @param thin Every \code{thin}-th MCMC sample is stored.
+#' @param nleapfrog The number of leapfrog steps in each MCMC iteration is sampled from \eqn{\min\{1,\text{Poisson}(\texttt{nleapfrog}) \} }.
+#' @param leapmax The number of leapfrog steps is bounded above by \code{leapmax}.
+#' @param del_range The step size of \eqn{\delta t} in  each HMC step is simulated as \eqn{ \delta t \sim} Uniform\code{(del_range[1],del_range[2])}.
+#'
+#' @return A list with the following elements:
+#' \describe{
+#' \item{\code{Lambda}}{An array with the MCMC samples of \eqn{\mathbf{\Lambda}}. MCMC samples are stored along the third dimension.}
+#' \item{\code{residuals}}{A matrix with the MCMC samples of \eqn{\mathrm{diag}(\mathbf{\Delta})=(\delta_{1}^{2},\dots,\delta_{d}^{2})^{T}}. The MCMC samples are stored along the rows of \code{residuals}.}
+#' \item{\code{acceptance_probability}}{The acceptance probability of the HMC-within-Gibbs sampler.}
+#' }
+#' @export
+#'
+#' @examples
+#' vignette(topic="sparse_BFA",package = "SUFA")
+fit_FA=function(Y,qmax,a=0.5, ms=1,ss=7, 
+                  nrun=7.5e3, thin=5,
+                  nleapfrog=6,leapmax=10,del_range=c(.001,.0075)){
+  p=ncol(Y)
+  init.vals=spca(Y, pr=.95,nv=qmax)
+  Phi.init=init.vals$lambda
+  #################################################
+  RcppArmadillo::armadillo_set_number_of_omp_threads(6);
+  cov_est_HMC( a, c(ms, ss),
+               nrun=nrun, thin=thin, nleapfrog=nleapfrog, del_range=del_range,
+               phimat=Phi.init, Y=Y,leapmin=3,leapmax=leapmax)
 }
 
 #' Heatmap of a matrix
@@ -460,3 +497,45 @@ heatplot=function(x){
     scale_fill_viridis_c(option="B",alpha=1)
 }
 
+#' Gene expression datasets from the Immgen project
+#' 
+#'  
+#' We integrate data from three studies analyzing gene expressions. 
+#' The first is the GSE109125 bulkRNAseq dataset, collected from 103 highly purified immunocyte populations representing all lineages and several differentiation cascades and profiled using the ImmGen  pipeline \insertCite{bulk_train}{SUFA}. 
+#' The second study is  a microarray dataset GSE15907 \insertCite{micro1_train1,micro1_train2}{SUFA}, measured on multiple \emph{ex-vivo} immune lineages, primarily from adult B6 male mice. 
+#' Finally, we include the GSE37448 \insertCite{micro2_train}{SUFA} microarray dataset, also  part of the Immgen project. 
+#' 
+#' @docType data
+#' @format A \code{list} with the following elements:
+#' \describe{
+#' \item{bulk}{The GSE109125 bulkRNASeq data in gene x cell format}
+#' \item{array1}{First microarray dataset GSE15907 data in gene x cell format}
+#' \item{array2}{Second microarray dataset GSE37448 data in gene x cell format}
+#' \item{bulk.types}{A string vector indicating the cell-types in the bulkRNASeq data}
+#' \item{array1.types}{A string vector indicating the cell-types in the first microarray data}
+#' \item{array2.types}{A string vector indicating the cell-types in the second microarray data}
+#' }
+#' 
+#' @source {GSE109125, GSE15907 and GSE37448}
+#' @note In these datasets, we only include those cell-types with at least 3 observations. We have also \code{log2}-transformed the original expression-count data.
+#' @references
+#' \insertAllCited{}
+#' @examples
+#' download_genedata()
+
+download_genedata=function(){
+  library(httr)
+  url <- "https://utdallas.box.com/shared/static/tuqwc8i0mzixs83wkvtla7qx0sg34365.rda"
+  temp <- tempfile(fileext = ".rda")
+  
+  # Download the file to a temporary location
+  httr::GET(url, write_disk(temp, overwrite = TRUE))
+  
+  # Load the file from the temporary location
+  load(temp)
+  
+  # Clean up the temporary file
+  unlink(temp)
+  
+  return(genedata)
+}

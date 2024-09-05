@@ -1,9 +1,9 @@
 ---
-title: "Introduction to SUFA: Simulated Data"
+title: "Sparse Bayesian Factor Analysis Model"
 output: rmarkdown::html_vignette
 bibliography: ../inst/REFERENCES.bib
 vignette: >
-  %\VignetteIndexEntry{Introduction to SUFA: Simulated Data}
+  %\VignetteIndexEntry{Sparse Bayesian Factor Analysis Model}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -15,16 +15,23 @@ knitr::opts_chunk$set(
 )
 ```
 
-# Simulate Data from a Multi-study Setup
+We include an implementation of Hamiltonian Monte Carlo-based sparse Bayesian factor analysis model. We observed iid $d$-variate data $Y_{1},\dots,Y_{n}$ where 
+\begin{equation}
+\mathbf{Y}_{i} \sim N_{d}( \mathbf{0}, \mathbf{\Sigma}=\mathbf{\Lambda}\mathbf{\Lambda}^{T}+\mathbf{\Delta} ) \text{ where } \mathbf{\Delta}=\mathrm{diag}(\delta_{1}^{2},\dots,\delta_{d}^{2}).
+\end{equation} Our implementation aims to recover the marginal covariance matrix $\mathbf{\Sigma}$, and also the factor loading matrix $\mathbf{\Lambda}$ and the diagonal idiosyncratic variance matrix $\mathbf{\Delta}$ from observed $Y_{1},\dots,Y_{n}$.
 
-We sample data \begin{equation*}
-\mathbf{Y}_{s,i} \sim N_{d}( \mathbf{0}, \mathbf{\Lambda}\mathbf{\Lambda}^{T}+\mathbf{\Phi}_{s}\mathbf{\Phi}_{s}^{T}+\mathbf{\Delta} )
-\end{equation*}
+We assume the following priors \begin{equation}
+\mathrm{vectorize}(\mathbf{\Lambda})\sim \mathrm{DL(a)}, ~~ \log\delta_{j}^{2} \sim \mathrm{N}(\mu_{\delta},\sigma_{\delta}^{2}),
+\end{equation} where $\mathrm{DL(a)}$ denotes the Dirichlet-Laplace prior [@dir_laplace] with shrinkage parameter $a$.
 
-First we set a seed for reprodicibility:
+# Simulate Data from a sparse Bayesian factor analysis model
+
+We sample data from the Bayesian factor analysis analysis and recover the parameters.
+
+First, we set a seed for reprodicibility:
 
 ```{r set_seed}
-set.seed(35)
+set.seed(100)
 ```
 
 Load `SUFA`
@@ -33,30 +40,24 @@ Load `SUFA`
 library(SUFA)
 ```
 
-
 ```{r load_R_funcs, message=FALSE, results=FALSE, warning=FALSE, comment=FALSE}
 library(here)
 source(here("vignettes","simulate_data_fxns.R")) #We load some R functions
 ```
 
-## Set the Number of Studies, Dimensions and Sample Sizes
+## Set Dimensions and Sample Sizes
 
-We consider $S=5$ studies, and choose dimension $(d)$, sample sizes in each study $(n_{s})$, dimensions of the shared $(q)$:
+We choose dimension $(d)$, sample size $(n)$, column dimension $(q)$ of $\mathbf{\Lambda}$:
 
 ```{r set_dimension}
-S=5 ## no. of studies
 d= 200 ## observed dimension
 q= 20 ## latent dimension of the shared subspace
-n=d;ns=sapply(rpois(S,n/S),max,n/S) ## sample-sizes in each study
+n=d/2
 ```
 
-We ensure at least $n_{s}\geq \frac {d} {S}$ for all $s=1,\dots,S$.
+We choose $n=d/2$ to replicate a **large dimension small sample size** scenario.
 
-Next we randomly sample the dimensions of the study-specific latent factors $(q_{s})$ while ensuring that $q_{s} \leq \frac{q}{S}$:
-
-```{r set_dimension_latent}
-qs=sapply(rpois(S,floor(q/S))+1,min,floor(q/S))
-```
+We repeat the simulations for different structures of $\mathbf{\Lambda}$.
 
 ## Scenario 1
 
@@ -84,42 +85,26 @@ Set the diagonal idiosyncratic variance matrix $\mathbf{\Delta}=0.5\times \mathb
 diag_sd=sqrt(.5) ##sd
 ```
 
-### We consider "Complete Misspecified" case:
+### Sample data
 
-We consider the case where $\mathbf{\Phi}_{s}$'s are in the null-space of the column space of $\mathbf{\Lambda}$ so that the study-specific loading matrices are completely outside the proposed SUFA class using the `R::MASS` package.
-
-```{r null_lam}
-null_lam=MASS::Null(lam) ##null-space of lam
-
-Y=replicate(S,list(1))
-    lambda=replicate(S,list(1))
-    covmat=replicate(S,list(1))
-    for(s in 1:S){
-      eta=matrix(rnorm(ns[s]*q), nrow=ns[s],ncol=q)
-      
-      lambda_s=matrix (rnorm(q*qs[s],sd=.25),  nrow=q,ncol=qs[s])
-      lambda[[s]]=lam %*% lambda_s + matrix(rnorm(d*qs[s],sd=.1),nrow = d,ncol=qs[s])
-      
-      ls=matrix(rnorm(ns[s]*qs[s]), nrow=ns[s],ncol=qs[s])
-      
-      Y[[s]] =tcrossprod(eta,lam)+tcrossprod(ls,lambda[[s]]) + matrix(rnorm(d*ns[s],sd=diag_sd),nrow=ns[s],ncol=d)
-    }
-    
-    covmat_shared=tcrossprod(lam) + diag_sd*diag(d) ##True shared covariance matrix
+```{r sample}
+covmat_true=tcrossprod(lam)+ (diag_sd^2)*diag(d)
+Y=mvtnorm::rmvnorm(n=n,sigma=covmat_true)
 ```
 
-`Y` is a `list` of length $S=5$ mimicking $S$ studies.
+`Y` is a $n\times d$ `matrix`.
 
 ## Fit the SUFA Model
 
 ```{r fit_SUFA, message=FALSE, results=FALSE, warning=FALSE, comment=FALSE}
-time.taken=system.time(res<-fit_SUFA(Y,qmax=25,nthreads = 6,nrun = 7.5e3,
-                                     nleapfrog = 4, leapmax = 9, del_range = c(0,.01)))
+time.taken=system.time(res<-fit_FA(Y,qmax=25,nrun = 7.5e3,
+                                     nleapfrog = 3, leapmax = 6, del_range = c(0,.01)))
 ```
 
 **Note:** Depending on the acceptance probability, `nleapfrog` and `del_range` might need some tweaks.
 
 We report the acceptance probability and execution time for 7,500 MCMC iterations:
+
 ```{r}
 time.taken
 
@@ -127,29 +112,31 @@ res$acceptance_probability
 ```
 
 We discard the first 2,500 iterations as the burnin samples. Since we used a thinning interval of 5 to store the MCMC samples, we set `burnin=2500/5=500`.
+
 ```{r set_burnin}
 burnin=500
 ```
 
-
-### Compare True and Estimated Shared Covariance Matrix $\mathbf{\Sigma}=\mathbf{\Lambda}\mathbf{\Lambda}^{T}+\mathbf{\Delta}$
+### Compare True and Estimated Covariance Matrix $\mathbf{\Sigma}=\mathbf{\Lambda}\mathbf{\Lambda}^{T}+\mathbf{\Delta}$
 
 We consider the posterior mean of $\mathbf{\Sigma}$ as the point estimate:
+
 ```{r shared_sigma_mean}
-covmat_shared_est=SUFA_shared_covmat(res,burn = burnin)
+covmat_est=SUFA_shared_covmat(res,burn = burnin)
 ```
 
 We plot the true and estimated correlation matrices, i.e., `cov2cor`$(\mathbf{\Sigma})$:
+
 ```{r plot_sigmas, fig.dim = c(8, 5)}
-cormat_true=cov2cor(covmat_shared)
-cormat_est=cov2cor(covmat_shared_est)
+cormat_true=cov2cor(covmat_true)
+cormat_est=cov2cor(covmat_est)
 sig_true=heatplot(cormat_true)+ theme(legend.position='bottom')+labs(title="True")
 sig_est=heatplot(cormat_est)+ theme(legend.position='bottom')+labs(title="Estimated")
 ggpubr::ggarrange(sig_true,sig_est,ncol = 2)
 ```
 
-For easier visualization of the correlation structure, we now plot the above but use gray
-color for correlations having absolute value less then 0.10.
+For easier visualization of the correlation structure, we now plot the above but use gray color for correlations having absolute value less then 0.10.
+
 ```{r plot_sigmas_sparse, fig.dim = c(8, 5)}
 cormat_true[abs(cormat_true)<.1] =NA
 cormat_est[abs(cormat_est)<.1] =NA
@@ -165,11 +152,13 @@ rm(sig_true,sig_est,cormat_true,cormat_est)
 ### Compare True and Estimated Shared Loading Matrix $\mathbf{\Lambda}$
 
 We use the post-processing scheme described in the paper to obtain a point estimate of $\mathbf{\Lambda}$:
+
 ```{r posterior_lambda}
 est_lam=lam.est(res$Lambda,burn = burnin)
 ```
 
 We plot the true and estimated $(\mathbf{\Lambda})$ with grey color to encode 0 values:
+
 ```{r plot_lambdass, fig.dim = c(6, 5)}
 lam.sp=lam; lam.sp[lam==0]=NA
 est_lam.sp=est_lam; est_lam.sp[est_lam==0]=NA
@@ -183,20 +172,16 @@ ggpubr::ggarrange(lam_true.gg,lam_est.gg,ncol = 2)
 rm(lam.sp,est_lam.sp, lam_true.gg, lam_est.gg)
 ```
 
-
 #### Quantifying the Recovery Level of $\mathbf{\Lambda}$
-We quantify whether the post-processed $\widehat{\mathbf{\Lambda}}$ recovers true ${\mathbf{\Lambda}}$ by regressing each column of ${\mathbf{\Lambda}}$ on $\widehat{\mathbf{\Lambda}}$ and report the coefficient of determination $R^2$'s: 
+
+We quantify whether the post-processed $\widehat{\mathbf{\Lambda}}$ recovers true ${\mathbf{\Lambda}}$ by regressing each column of ${\mathbf{\Lambda}}$ on $\widehat{\mathbf{\Lambda}}$ and report the coefficient of determination $R^2$'s:
+
 ```{r coeff_r2}
 fit_lm=summary(lm(lam~est_lam)) ## regress true lambda on estimated lambda
 summary(sapply(fit_lm, function(x) x$r.squared)) ## report the r-squares r-squares
 ```
 
 $R^2$ values close to 1 indicates that the true ${\mathbf{\Lambda}}$ is indeed recovered up to some non-singular matrix multiplication.
-
-### Assess Model Fit Using WBIC by @wbic2013 
-```{r wbic}
-WBIC(res ,Y, model="SUFA",burn=5e2,ncores=1)
-```
 
 ## Scenario 2
 
@@ -226,42 +211,26 @@ Set the diagonal idiosyncratic variance matrix $\mathbf{\Delta}=0.5\times \mathb
 diag_sd=sqrt(.5) ##sd
 ```
 
-### We consider "Complete Misspecified" case:
+### Sample data
 
-We consider the case where $\mathbf{\Phi}_{s}$'s are in the null-space of the column space of $\mathbf{\Lambda}$ so that the study-specific loading matrices are completely outside the proposed SUFA class using the `R::MASS` package.
-
-```{r null_lam_FM2}
-null_lam=MASS::Null(lam) ##null-space of lam
-
-Y=replicate(S,list(1))
-    lambda=replicate(S,list(1))
-    covmat=replicate(S,list(1))
-    for(s in 1:S){
-      eta=matrix(rnorm(ns[s]*q), nrow=ns[s],ncol=q)
-      
-      lambda_s=matrix (rnorm(q*qs[s],sd=.25),  nrow=q,ncol=qs[s])
-      lambda[[s]]=lam %*% lambda_s + matrix(rnorm(d*qs[s],sd=.1),nrow = d,ncol=qs[s])
-      
-      ls=matrix(rnorm(ns[s]*qs[s]), nrow=ns[s],ncol=qs[s])
-      
-      Y[[s]] =tcrossprod(eta,lam)+tcrossprod(ls,lambda[[s]]) + matrix(rnorm(d*ns[s],sd=diag_sd),nrow=ns[s],ncol=d)
-    }
-    
-    covmat_shared=tcrossprod(lam) + diag_sd*diag(d) ##True shared covariance matrix
+```{r sample_FM2}
+covmat_true=tcrossprod(lam)+ (diag_sd^2)*diag(d)
+Y=mvtnorm::rmvnorm(n=n,sigma=covmat_true)
 ```
 
-`Y` is a `list` of length $S=5$ mimicking $S$ studies.
+`Y` is a $n\times d$ `matrix`.
 
 ## Fit the SUFA Model
 
 ```{r fit_SUFA_FM2, message=FALSE, results=FALSE, warning=FALSE, comment=FALSE}
-time.taken=system.time(res<-fit_SUFA(Y,qmax=25,nthreads = 6,nrun = 7.5e3,
-                                     nleapfrog = 4, leapmax = 9, del_range = c(0,.01)))
+time.taken=system.time(res<-fit_FA(Y,qmax=25,nrun = 7.5e3,
+                                     nleapfrog = 3, leapmax = 6, del_range = c(0,.01)))
 ```
 
 **Note:** Depending on the acceptance probability, `nleapfrog` and `del_range` might need some tweaks.
 
 We report the acceptance probability and execution time for 7,500 MCMC iterations:
+
 ```{r}
 time.taken
 
@@ -269,29 +238,31 @@ res$acceptance_probability
 ```
 
 We discard the first 2,500 iterations as the burnin samples. Since we used a thinning interval of 5 to store the MCMC samples, we set `burnin=2500/5=500`.
+
 ```{r set_burnin_FM2}
 burnin=500
 ```
 
-
-### Compare True and Estimated Shared Covariance Matrix $\mathbf{\Sigma}=\mathbf{\Lambda}\mathbf{\Lambda}^{T}+\mathbf{\Delta}$
+### Compare True and EstimatedCovariance Matrix $\mathbf{\Sigma}=\mathbf{\Lambda}\mathbf{\Lambda}^{T}+\mathbf{\Delta}$
 
 We consider the posterior mean of $\mathbf{\Sigma}$ as the point estimate:
+
 ```{r shared_sigma_mean_FM2}
-covmat_shared_est=SUFA_shared_covmat(res,burn = burnin)
+covmat_est=SUFA_shared_covmat(res,burn = burnin)
 ```
 
 We plot the true and estimated correlation matrices, i.e., `cov2cor`$(\mathbf{\Sigma})$:
+
 ```{r plot_sigmas_FM2, fig.dim = c(8, 5)}
-cormat_true=cov2cor(covmat_shared)
-cormat_est=cov2cor(covmat_shared_est)
+cormat_true=cov2cor(covmat_true)
+cormat_est=cov2cor(covmat_est)
 sig_true=heatplot(cormat_true)+ theme(legend.position='bottom')+labs(title="True")
 sig_est=heatplot(cormat_est)+ theme(legend.position='bottom')+labs(title="Estimated")
 ggpubr::ggarrange(sig_true,sig_est,ncol = 2)
 ```
 
-For easier visualization of the correlation structure, we now plot the above but use gray
-color for correlations having absolute value less then 0.10.
+For easier visualization of the correlation structure, we now plot the above but use gray color for correlations having absolute value less then 0.10.
+
 ```{r plot_sigmas_sparse_FM2, fig.dim = c(8, 5)}
 cormat_true[abs(cormat_true)<.1] =NA
 cormat_est[abs(cormat_est)<.1] =NA
@@ -307,11 +278,13 @@ rm(sig_true,sig_est,cormat_true,cormat_est)
 ### Compare True and Estimated Shared Loading Matrix $\mathbf{\Lambda}$
 
 We use the post-processing scheme described in the paper to obtain a point estimate of $\mathbf{\Lambda}$:
+
 ```{r posterior_lambda_FM2}
 est_lam=lam.est(res$Lambda,burn = burnin)
 ```
 
 We plot the true and estimated $(\mathbf{\Lambda})$ with grey color to encode 0 values:
+
 ```{r plot_lambdass_FM2, fig.dim = c(6, 5)}
 lam.sp=lam; lam.sp[lam==0]=NA
 est_lam.sp=est_lam; est_lam.sp[est_lam==0]=NA
@@ -325,20 +298,16 @@ ggpubr::ggarrange(lam_true.gg,lam_est.gg,ncol = 2)
 rm(lam.sp,est_lam.sp, lam_true.gg, lam_est.gg)
 ```
 
-
 #### Quantifying the Recovery Level of $\mathbf{\Lambda}$
-We quantify whether the post-processed $\widehat{\mathbf{\Lambda}}$ recovers true ${\mathbf{\Lambda}}$ by regressing each column of ${\mathbf{\Lambda}}$ on $\widehat{\mathbf{\Lambda}}$ and report the coefficient of determination $R^2$'s: 
+
+We quantify whether the post-processed $\widehat{\mathbf{\Lambda}}$ recovers true ${\mathbf{\Lambda}}$ by regressing each column of ${\mathbf{\Lambda}}$ on $\widehat{\mathbf{\Lambda}}$ and report the coefficient of determination $R^2$'s:
+
 ```{r coeff_r2_FM2}
 fit_lm=summary(lm(lam~est_lam)) ## regress true lambda on estimated lambda
 summary(sapply(fit_lm, function(x) x$r.squared)) ## report the r-squares r-squares
 ```
 
 $R^2$ values close to 1 indicates that the true ${\mathbf{\Lambda}}$ is indeed recovered up to some non-singular matrix multiplication.
-
-### Assess Model Fit Using WBIC by @wbic2013 
-```{r wbic_FM2}
-WBIC(res ,Y, model="SUFA",burn=5e2,ncores=1)
-```
 
 ## Scenario 3
 
@@ -371,42 +340,26 @@ Set the diagonal idiosyncratic variance matrix $\mathbf{\Delta}=0.5\times \mathb
 diag_sd=sqrt(.5) ##sd
 ```
 
-### We consider "Complete Misspecified" case:
+### Sample data
 
-We consider the case where $\mathbf{\Phi}_{s}$'s are in the null-space of the column space of $\mathbf{\Lambda}$ so that the study-specific loading matrices are completely outside the proposed SUFA class using the `R::MASS` package.
-
-```{r null_lam_FM3}
-null_lam=MASS::Null(lam) ##null-space of lam
-
-Y=replicate(S,list(1))
-    lambda=replicate(S,list(1))
-    covmat=replicate(S,list(1))
-    for(s in 1:S){
-      eta=matrix(rnorm(ns[s]*q), nrow=ns[s],ncol=q)
-      
-      lambda_s=matrix (rnorm(q*qs[s],sd=.25),  nrow=q,ncol=qs[s])
-      lambda[[s]]=lam %*% lambda_s + matrix(rnorm(d*qs[s],sd=.1),nrow = d,ncol=qs[s])
-      
-      ls=matrix(rnorm(ns[s]*qs[s]), nrow=ns[s],ncol=qs[s])
-      
-      Y[[s]] =tcrossprod(eta,lam)+tcrossprod(ls,lambda[[s]]) + matrix(rnorm(d*ns[s],sd=diag_sd),nrow=ns[s],ncol=d)
-    }
-    
-    covmat_shared=tcrossprod(lam) + diag_sd*diag(d) ##True shared covariance matrix
+```{r sample_FM3}
+covmat_true=tcrossprod(lam)+ (diag_sd^2)*diag(d)
+Y=mvtnorm::rmvnorm(n=n,sigma=covmat_true)
 ```
 
-`Y` is a `list` of length $S=5$ mimicking $S$ studies.
+`Y` is a $n\times d$ `matrix`.
 
 ## Fit the SUFA Model
 
 ```{r fit_SUFA_FM3, message=FALSE, results=FALSE, warning=FALSE, comment=FALSE}
-time.taken=system.time(res<-fit_SUFA(Y,qmax=25,nthreads = 6,nrun = 7.5e3,
-                                     nleapfrog = 4, leapmax = 9, del_range = c(0,.01)))
+time.taken=system.time(res<-fit_FA(Y,qmax=25,nrun = 7.5e3,
+                                     nleapfrog = 3, leapmax = 6, del_range = c(0,.01)))
 ```
 
 **Note:** Depending on the acceptance probability, `nleapfrog` and `del_range` might need some tweaks.
 
 We report the acceptance probability and execution time for 7,500 MCMC iterations:
+
 ```{r}
 time.taken
 
@@ -414,29 +367,31 @@ res$acceptance_probability
 ```
 
 We discard the first 2,500 iterations as the burnin samples. Since we used a thinning interval of 5 to store the MCMC samples, we set `burnin=2500/5=500`.
+
 ```{r set_burnin_FM3}
 burnin=500
 ```
 
-
-### Compare True and Estimated Shared Covariance Matrix $\mathbf{\Sigma}=\mathbf{\Lambda}\mathbf{\Lambda}^{T}+\mathbf{\Delta}$
+### Compare True and Estimated Covariance Matrix $\mathbf{\Sigma}=\mathbf{\Lambda}\mathbf{\Lambda}^{T}+\mathbf{\Delta}$
 
 We consider the posterior mean of $\mathbf{\Sigma}$ as the point estimate:
+
 ```{r shared_sigma_mean_FM3}
-covmat_shared_est=SUFA_shared_covmat(res,burn = burnin)
+covmat_est=SUFA_shared_covmat(res,burn = burnin)
 ```
 
 We plot the true and estimated correlation matrices, i.e., `cov2cor`$(\mathbf{\Sigma})$:
+
 ```{r plot_sigmas_FM3, fig.dim = c(8, 5)}
-cormat_true=cov2cor(covmat_shared)
-cormat_est=cov2cor(covmat_shared_est)
+cormat_true=cov2cor(covmat_true)
+cormat_est=cov2cor(covmat_est)
 sig_true=heatplot(cormat_true)+ theme(legend.position='bottom')+labs(title="True")
 sig_est=heatplot(cormat_est)+ theme(legend.position='bottom')+labs(title="Estimated")
 ggpubr::ggarrange(sig_true,sig_est,ncol = 2)
 ```
 
-For easier visualization of the correlation structure, we now plot the above but use gray
-color for correlations having absolute value less then 0.10.
+For easier visualization of the correlation structure, we now plot the above but use gray color for correlations having absolute value less then 0.10.
+
 ```{r plot_sigmas_sparse_FM3, fig.dim = c(8, 5)}
 cormat_true[abs(cormat_true)<.1] =NA
 cormat_est[abs(cormat_est)<.1] =NA
@@ -452,11 +407,13 @@ rm(sig_true,sig_est,cormat_true,cormat_est)
 ### Compare True and Estimated Shared Loading Matrix $\mathbf{\Lambda}$
 
 We use the post-processing scheme described in the paper to obtain a point estimate of $\mathbf{\Lambda}$:
+
 ```{r posterior_lambda_FM3}
 est_lam=lam.est(res$Lambda,burn = burnin)
 ```
 
 We plot the true and estimated $(\mathbf{\Lambda})$ with grey color to encode 0 values:
+
 ```{r plot_lambdass_FM3, fig.dim = c(6, 5)}
 lam.sp=lam; lam.sp[lam==0]=NA
 est_lam.sp=est_lam; est_lam.sp[est_lam==0]=NA
@@ -470,23 +427,15 @@ ggpubr::ggarrange(lam_true.gg,lam_est.gg,ncol = 2)
 rm(lam.sp,est_lam.sp, lam_true.gg, lam_est.gg)
 ```
 
-
 #### Quantifying the Recovery Level of $\mathbf{\Lambda}$
-We quantify whether the post-processed $\widehat{\mathbf{\Lambda}}$ recovers true ${\mathbf{\Lambda}}$ by regressing each column of ${\mathbf{\Lambda}}$ on $\widehat{\mathbf{\Lambda}}$ and report the coefficient of determination $R^2$'s: 
+
+We quantify whether the post-processed $\widehat{\mathbf{\Lambda}}$ recovers true ${\mathbf{\Lambda}}$ by regressing each column of ${\mathbf{\Lambda}}$ on $\widehat{\mathbf{\Lambda}}$ and report the coefficient of determination $R^2$'s:
+
 ```{r coeff_r2_FM3}
 fit_lm=summary(lm(lam~est_lam)) ## regress true lambda on estimated lambda
 summary(sapply(fit_lm, function(x) x$r.squared)) ## report the r-squares r-squares
 ```
 
 $R^2$ values close to 1 indicates that the true ${\mathbf{\Lambda}}$ is indeed recovered up to some non-singular matrix multiplication.
-
-### Assess Model Fit Using WBIC by @wbic2013 
-```{r wbic_FM3}
-WBIC(res ,Y, model="SUFA",burn=5e2,ncores=1)
-```
-
-## Study-specific Inferences
-
-For study-specific inferences refer to the the other vignette with the gene network application.
 
 ## References

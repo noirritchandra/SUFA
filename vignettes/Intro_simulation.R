@@ -58,7 +58,7 @@ Y=replicate(S,list(1))
     covmat_shared=tcrossprod(lam) + diag_sd*diag(d) ##True shared covariance matrix
 
 ## ----fit_SUFA, message=FALSE, results=FALSE, warning=FALSE, comment=FALSE-----
-time.taken=system.time(res<-fit_SUFA(Y,qmax=25,nthreads = 5,nrun = 7.5e3,
+time.taken=system.time(res<-fit_SUFA(Y,qmax=25,nthreads = 6,nrun = 7.5e3,
                                      nleapfrog = 4, leapmax = 9, del_range = c(0,.01)))
 
 ## -----------------------------------------------------------------------------
@@ -145,7 +145,7 @@ Y=replicate(S,list(1))
     covmat_shared=tcrossprod(lam) + diag_sd*diag(d) ##True shared covariance matrix
 
 ## ----fit_SUFA_FM2, message=FALSE, results=FALSE, warning=FALSE, comment=FALSE----
-time.taken=system.time(res<-fit_SUFA(Y,qmax=25,nthreads = 5,nrun = 7.5e3,
+time.taken=system.time(res<-fit_SUFA(Y,qmax=25,nthreads = 6,nrun = 7.5e3,
                                      nleapfrog = 4, leapmax = 9, del_range = c(0,.01)))
 
 ## -----------------------------------------------------------------------------
@@ -235,7 +235,7 @@ Y=replicate(S,list(1))
     covmat_shared=tcrossprod(lam) + diag_sd*diag(d) ##True shared covariance matrix
 
 ## ----fit_SUFA_FM3, message=FALSE, results=FALSE, warning=FALSE, comment=FALSE----
-time.taken=system.time(res<-fit_SUFA(Y,qmax=25,nthreads = 5,nrun = 7.5e3,
+time.taken=system.time(res<-fit_SUFA(Y,qmax=25,nthreads = 6,nrun = 7.5e3,
                                      nleapfrog = 4, leapmax = 9, del_range = c(0,.01)))
 
 ## -----------------------------------------------------------------------------

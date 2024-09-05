@@ -15,7 +15,7 @@ fast_fact_inv(Lambda, ps)
 The matrix \eqn{(\Lambda \Lambda^T+\mathrm{diag}(\texttt{ps}) )^{-1}}
 }
 \description{
-Matrix inversion using low-rank plus diagonal decomposition
+Fast inversion of \eqn{\Sigma=\Lambda \Lambda^T+\mathrm{diag}(\texttt{ps})} using the \href{https://en.wikipedia.org/wiki/Woodbury_matrix_identity}{Woodbury matrix identity}
 }
 \examples{
 d=1e3; q=50

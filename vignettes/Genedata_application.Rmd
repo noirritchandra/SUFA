@@ -18,11 +18,12 @@ knitr::opts_chunk$set(
 We now turn to a case study on gene associations among immune cells.
 Here, we integrate data from three studies analyzing gene expressions. The first is the GSE109125 bulkRNAseq dataset, collected from 103 highly purified immunocyte populations representing all lineages and several differentiation cascades and profiled using the ImmGen pipeline [@bulk_train]. The second study is a microarray dataset GSE15907 [@micro1_train1; @micro1_train2], measured on multiple *ex-vivo* immune lineages, primarily from adult B6 male mice. Finally, we include the GSE37448 [@micro2_train] microarray dataset, also part of the Immgen project.
 
-## Load Data from the SUFA `R` package
+## Download Data using the SUFA `R` package
 
 ```{r setup}
 library(SUFA)
-data(genedata)
+genedata=download_genedata()
+# data(genedata)
 ```
 
 An `R` list named `genedata` will be loaded into the environment. See the relevant documentation.
@@ -53,11 +54,8 @@ Ident.array2= genedata$array2.types
 
 ```{r install_genefilter}
 if (!require("genefilter", quietly = TRUE)){
-  # if (!require("BiocManager", quietly = TRUE))
-  #   install.packages("BiocManager")
   BiocManager::install("genefilter")
 }
-# BiocManager::install("genefilter")
 library(Biobase);library(genefilter)
 ```
 
@@ -152,8 +150,8 @@ Y_cent_scaled=lapply(Y_cent, "/",   sd.median)
 ### Fit SUFA
 
 ```{r fit_SUFA, message=FALSE, results=FALSE, warning=FALSE, comment=FALSE}
-res.sufa<-fit_SUFA(Y_cent_scaled,qmax=25,nthreads = 5,nrun = 7.5e3,
-                                     nleapfrog = 4, leapmax = 9, del_range = c(0,.009))
+res.sufa<-fit_SUFA(Y_cent_scaled,qmax=25,nthreads = 3,nrun = 7.5e3,
+                                     nleapfrog = 4, leapmax = 9, del_range = c(0.001,.009))
 ```
 
 We discard the first 2,500 iterations as the burnin samples. Since we used a thinning interval of 5 to store the MCMC samples, we set `burnin=2500/5=500`.
@@ -165,7 +163,7 @@ burn=500
 Obtain the widely application Bayesian information criterion (WBIC) [@wbic2013]:
 
 ```{r wbic}
-WBIC(res.sufa ,Y_cent_scaled, model="SUFA",burn=5e2,ncores=1)
+WBIC(res.sufa ,Y_cent_scaled, model="SUFA",burn=burn,ncores=1)
 ```
 
 ## Obtain the shared correlation matrix
@@ -178,7 +176,7 @@ diags=apply(res.sufa$residuals[-(1:burn),],1,identity, simplify = F)
 
 cormats=abind::abind( mapply(function(phi, ps) cov2cor( tcrossprod(phi)+diag(ps)) 
                              ,phis,diags, SIMPLIFY = F),along = 3 )
-cormat_mean=apply(cormats, c(1, 2), mean)
+cormat_mean=  apply(cormats, c(1, 2), mean)
 
 alpha=.05
 low = apply(cormats, c(1, 2), quantile, alpha/2)

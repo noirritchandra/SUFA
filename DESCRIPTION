@@ -1,7 +1,7 @@
 Package: SUFA
 Type: Package
 Title: SUbspace Factor Analysis Model
-Version: 1.1.0
+Version: 2.0.0
 Date: 2023-10-17
 Author: Noirrit Kiran Chandra
 Encoding: UTF-8
@@ -9,10 +9,10 @@ Maintainer: Noirrit Kiran Chandra <noirritchandra@gmail.com>
 Description: Implements the SUbspace Factor Analysis Model (SUFA) for inferring covariance structure from multiple data sources.
 License: What license is it under?
 Imports: Rcpp (>= 1.0.7), here,irlba, ggplot2, plyr, dplyr, infinitefactor, abind, mvtnorm, raster,ggpubr,
-  Rdpack, rbenchmark, BiocManager, cluster, circlize, forcats, viridis, reshape2
+  Rdpack, rbenchmark, BiocManager, cluster, circlize, forcats, viridis, reshape2, httr, MASS
 LinkingTo: Rcpp, RcppArmadillo
 RdMacros: Rdpack
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.2
 Suggests: 
     knitr,
     rmarkdown

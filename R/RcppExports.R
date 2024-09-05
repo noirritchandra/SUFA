@@ -7,6 +7,8 @@ rig <- function(mu) {
 
 #' Matrix inversion using low-rank plus diagonal decomposition
 #'
+#' Fast inversion of \eqn{\Sigma=\Lambda \Lambda^T+\mathrm{diag}(\texttt{ps})} using the \href{https://en.wikipedia.org/wiki/Woodbury_matrix_identity}{Woodbury matrix identity}
+#'
 #' @param Lambda A \eqn{d \times q} order matrix \eqn{\Lambda} typically \eqn{q\ll d} 
 #' @param ps A vector of length \eqn{d} comprising positive elements
 #'
@@ -26,6 +28,8 @@ fast_fact_inv <- function(Lambda, ps) {
 }
 
 #' Determinant of a matrix using low-rank plus diagonal decomposition
+#'
+#' Fast determinant of \eqn{\Sigma=\Lambda \Lambda^T+\mathrm{diag}(\texttt{ps})} using the \href{https://en.wikipedia.org/wiki/Matrix_determinant_lemma}{Matrix determinant lemma}
 #'
 #' @param Lambda_orig A \eqn{d \times q} order matrix \eqn{\Lambda} typically \eqn{q\ll d} 
 #' @param ps A vector of length \eqn{d} comprising positive elements
@@ -60,16 +64,12 @@ log_det_pd <- function(X, lg = 1L) {
     .Call(`_SUFA_log_det_pd`, X, lg)
 }
 
-cov_est_HMC <- function(ms, ss, a, nrun, burn, thin, nleapfrog, del_range, phimat, Y, leapmin = 5L, leapmax = 15L) {
-    .Call(`_SUFA_cov_est_HMC`, ms, ss, a, nrun, burn, thin, nleapfrog, del_range, phimat, Y, leapmin, leapmax)
+cov_est_HMC <- function(a, ps_hyper, nrun, thin, nleapfrog, del_range, phimat, Y, leapmin = 5L, leapmax = 15L) {
+    .Call(`_SUFA_cov_est_HMC`, a, ps_hyper, nrun, thin, nleapfrog, del_range, phimat, Y, leapmin, leapmax)
 }
 
-DL_MSFA <- function(as, bs, a, nrun, burn, thin, Lambda_list, f_list, Y_list, l_list, phimat, S) {
-    .Call(`_SUFA_DL_MSFA`, as, bs, a, nrun, burn, thin, Lambda_list, f_list, Y_list, l_list, phimat, S)
-}
-
-cov_est <- function(as, bs, a, nrun, burn, thin, phimat, eta, Y) {
-    .Call(`_SUFA_cov_est`, as, bs, a, nrun, burn, thin, phimat, eta, Y)
+cov_est_Gibbs <- function(as, bs, a, nrun, burn, thin, phimat, eta, Y) {
+    .Call(`_SUFA_cov_est_Gibbs`, as, bs, a, nrun, burn, thin, phimat, eta, Y)
 }
 
 SUFA_HMC <- function(nrun, thin, nleapfrog, del_range, ps_hyper, A_hyper, a, Y_list, ks, phi_init, leapmax = 18L, leapmin = 5L, col_prob = 1.0, nthreads = 4L) {

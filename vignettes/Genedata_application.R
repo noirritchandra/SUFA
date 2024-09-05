@@ -6,7 +6,8 @@ knitr::opts_chunk$set(
 
 ## ----setup--------------------------------------------------------------------
 library(SUFA)
-data(genedata)
+genedata=download_genedata()
+# data(genedata)
 
 ## ----set_seed-----------------------------------------------------------------
 set.seed(1)
@@ -23,11 +24,8 @@ Ident.array2= genedata$array2.types
 
 ## ----install_genefilter-------------------------------------------------------
 if (!require("genefilter", quietly = TRUE)){
-  # if (!require("BiocManager", quietly = TRUE))
-  #   install.packages("BiocManager")
   BiocManager::install("genefilter")
 }
-# BiocManager::install("genefilter")
 library(Biobase);library(genefilter)
 
 ## ----hvg_bulk-----------------------------------------------------------------
@@ -90,8 +88,8 @@ sd.median=median( sapply(Y_cent, function(y) apply(y,2,sd)))
 Y_cent_scaled=lapply(Y_cent, "/",   sd.median)
 
 ## ----fit_SUFA, message=FALSE, results=FALSE, warning=FALSE, comment=FALSE-----
-res.sufa<-fit_SUFA(Y_cent_scaled,qmax=25,nthreads = 5,nrun = 7.5e3,
-                                     nleapfrog = 4, leapmax = 9, del_range = c(0,.009))
+res.sufa<-fit_SUFA(Y_cent_scaled,qmax=25,nthreads = 6,nrun = 7.5e3,
+                                     nleapfrog = 4, leapmax = 9, del_range = c(0,.01))
 
 ## ----set_burnin---------------------------------------------------------------
 burn=500

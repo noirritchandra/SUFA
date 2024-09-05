@@ -60,52 +60,28 @@ BEGIN_RCPP
 END_RCPP
 }
 // cov_est_HMC
-Rcpp::List cov_est_HMC(double ms, double ss, double a, int nrun, int burn, int thin, unsigned nleapfrog, arma::vec del_range, arma::mat phimat, arma::mat Y, unsigned leapmin, unsigned leapmax);
-RcppExport SEXP _SUFA_cov_est_HMC(SEXP msSEXP, SEXP ssSEXP, SEXP aSEXP, SEXP nrunSEXP, SEXP burnSEXP, SEXP thinSEXP, SEXP nleapfrogSEXP, SEXP del_rangeSEXP, SEXP phimatSEXP, SEXP YSEXP, SEXP leapminSEXP, SEXP leapmaxSEXP) {
+Rcpp::List cov_est_HMC(const double a, const arma::vec ps_hyper, const int nrun, const int thin, unsigned nleapfrog, arma::vec del_range, arma::mat phimat, const arma::mat Y, const unsigned leapmin, const unsigned leapmax);
+RcppExport SEXP _SUFA_cov_est_HMC(SEXP aSEXP, SEXP ps_hyperSEXP, SEXP nrunSEXP, SEXP thinSEXP, SEXP nleapfrogSEXP, SEXP del_rangeSEXP, SEXP phimatSEXP, SEXP YSEXP, SEXP leapminSEXP, SEXP leapmaxSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< double >::type ms(msSEXP);
-    Rcpp::traits::input_parameter< double >::type ss(ssSEXP);
-    Rcpp::traits::input_parameter< double >::type a(aSEXP);
-    Rcpp::traits::input_parameter< int >::type nrun(nrunSEXP);
-    Rcpp::traits::input_parameter< int >::type burn(burnSEXP);
-    Rcpp::traits::input_parameter< int >::type thin(thinSEXP);
+    Rcpp::traits::input_parameter< const double >::type a(aSEXP);
+    Rcpp::traits::input_parameter< const arma::vec >::type ps_hyper(ps_hyperSEXP);
+    Rcpp::traits::input_parameter< const int >::type nrun(nrunSEXP);
+    Rcpp::traits::input_parameter< const int >::type thin(thinSEXP);
     Rcpp::traits::input_parameter< unsigned >::type nleapfrog(nleapfrogSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type del_range(del_rangeSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type phimat(phimatSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< unsigned >::type leapmin(leapminSEXP);
-    Rcpp::traits::input_parameter< unsigned >::type leapmax(leapmaxSEXP);
-    rcpp_result_gen = Rcpp::wrap(cov_est_HMC(ms, ss, a, nrun, burn, thin, nleapfrog, del_range, phimat, Y, leapmin, leapmax));
+    Rcpp::traits::input_parameter< const arma::mat >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< const unsigned >::type leapmin(leapminSEXP);
+    Rcpp::traits::input_parameter< const unsigned >::type leapmax(leapmaxSEXP);
+    rcpp_result_gen = Rcpp::wrap(cov_est_HMC(a, ps_hyper, nrun, thin, nleapfrog, del_range, phimat, Y, leapmin, leapmax));
     return rcpp_result_gen;
 END_RCPP
 }
-// DL_MSFA
-Rcpp::List DL_MSFA(double as, double bs, double a, int nrun, int burn, int thin, Rcpp::List Lambda_list, Rcpp::List f_list, Rcpp::List Y_list, Rcpp::List l_list, arma::mat phimat, unsigned S);
-RcppExport SEXP _SUFA_DL_MSFA(SEXP asSEXP, SEXP bsSEXP, SEXP aSEXP, SEXP nrunSEXP, SEXP burnSEXP, SEXP thinSEXP, SEXP Lambda_listSEXP, SEXP f_listSEXP, SEXP Y_listSEXP, SEXP l_listSEXP, SEXP phimatSEXP, SEXP SSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< double >::type as(asSEXP);
-    Rcpp::traits::input_parameter< double >::type bs(bsSEXP);
-    Rcpp::traits::input_parameter< double >::type a(aSEXP);
-    Rcpp::traits::input_parameter< int >::type nrun(nrunSEXP);
-    Rcpp::traits::input_parameter< int >::type burn(burnSEXP);
-    Rcpp::traits::input_parameter< int >::type thin(thinSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type Lambda_list(Lambda_listSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type f_list(f_listSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type Y_list(Y_listSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type l_list(l_listSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type phimat(phimatSEXP);
-    Rcpp::traits::input_parameter< unsigned >::type S(SSEXP);
-    rcpp_result_gen = Rcpp::wrap(DL_MSFA(as, bs, a, nrun, burn, thin, Lambda_list, f_list, Y_list, l_list, phimat, S));
-    return rcpp_result_gen;
-END_RCPP
-}
-// cov_est
-Rcpp::List cov_est(double as, double bs, double a, int nrun, int burn, int thin, arma::mat phimat, arma::mat eta, arma::mat Y);
-RcppExport SEXP _SUFA_cov_est(SEXP asSEXP, SEXP bsSEXP, SEXP aSEXP, SEXP nrunSEXP, SEXP burnSEXP, SEXP thinSEXP, SEXP phimatSEXP, SEXP etaSEXP, SEXP YSEXP) {
+// cov_est_Gibbs
+Rcpp::List cov_est_Gibbs(double as, double bs, double a, int nrun, int burn, int thin, arma::mat phimat, arma::mat eta, arma::mat Y);
+RcppExport SEXP _SUFA_cov_est_Gibbs(SEXP asSEXP, SEXP bsSEXP, SEXP aSEXP, SEXP nrunSEXP, SEXP burnSEXP, SEXP thinSEXP, SEXP phimatSEXP, SEXP etaSEXP, SEXP YSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -118,7 +94,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::mat >::type phimat(phimatSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type eta(etaSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type Y(YSEXP);
-    rcpp_result_gen = Rcpp::wrap(cov_est(as, bs, a, nrun, burn, thin, phimat, eta, Y));
+    rcpp_result_gen = Rcpp::wrap(cov_est_Gibbs(as, bs, a, nrun, burn, thin, phimat, eta, Y));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -164,9 +140,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_SUFA_fast_fact_inv", (DL_FUNC) &_SUFA_fast_fact_inv, 2},
     {"_SUFA_fast_fact_det", (DL_FUNC) &_SUFA_fast_fact_det, 3},
     {"_SUFA_log_det_pd", (DL_FUNC) &_SUFA_log_det_pd, 2},
-    {"_SUFA_cov_est_HMC", (DL_FUNC) &_SUFA_cov_est_HMC, 12},
-    {"_SUFA_DL_MSFA", (DL_FUNC) &_SUFA_DL_MSFA, 12},
-    {"_SUFA_cov_est", (DL_FUNC) &_SUFA_cov_est, 9},
+    {"_SUFA_cov_est_HMC", (DL_FUNC) &_SUFA_cov_est_HMC, 10},
+    {"_SUFA_cov_est_Gibbs", (DL_FUNC) &_SUFA_cov_est_Gibbs, 9},
     {"_SUFA_SUFA_HMC", (DL_FUNC) &_SUFA_SUFA_HMC, 14},
     {"_SUFA_matchalign_permmat", (DL_FUNC) &_SUFA_matchalign_permmat, 2},
     {NULL, NULL, 0}

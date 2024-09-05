@@ -17,7 +17,7 @@ fast_fact_det(Lambda_orig, ps, lg = 1L)
 If \code{lg=TRUE} then \code{log}-determinant of \eqn{\Lambda \Lambda^T+\mathrm{diag}(\texttt{ps}) }; else determinant of \eqn{\Lambda \Lambda^T+\mathrm{diag}(\texttt{ps}) }.
 }
 \description{
-Determinant of a matrix using low-rank plus diagonal decomposition
+Fast determinant of \eqn{\Sigma=\Lambda \Lambda^T+\mathrm{diag}(\texttt{ps})} using the \href{https://en.wikipedia.org/wiki/Matrix_determinant_lemma}{Matrix determinant lemma}
 }
 \examples{
 d=1e3; q=50
