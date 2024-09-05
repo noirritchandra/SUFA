@@ -1,4 +1,5 @@
 # SUFA 2.0.1
+Removed `LazyData` from package DESCRIPTION.
 
 # SUFA 2.0.0
 
