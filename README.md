@@ -34,7 +34,7 @@ but without any vignette. To install the vignette files containing
 illustrations, one must set `build_vignettes = TRUE`. However, this may
 take considerably more time to install the package.
 
-## Simulation Example
+## Simulation Examples on SUFA Model
 
 Refer to the following vignette for illustrations in simulated examples:
 
@@ -49,6 +49,14 @@ inference on gene networks:
 
 ``` r
 vignette(topic="Genedata_application",package = "SUFA")
+```
+
+## Simulation Examples on Sparse Bayesian Factor Models
+
+Refer to the following vignette for illustrations in simulated examples:
+
+``` r
+vignette(topic="sparse_BFA",package = "SUFA")
 ```
 
 <div id="refs" class="references csl-bib-body hanging-indent">

@@ -343,7 +343,7 @@ lam.est.all=function(res, burn=5e2,alpha=.05){
   # cl <- makeCluster(min(n.cores,length(res$A)), type="FORK")
   # registerDoParallel(cl)
   A_lists_lam_aligned=foreach(A =A_lists,
-                              .packages = c("infinitefactor", "OpenMPController","inline")) %do%{
+                              .packages = c("infinitefactor")) %do%{
                                 a=apply(A,3,identity,simplify = F)
                                 as_list=mapply(crossprod, rotmats, a,SIMPLIFY = F)
                                 var_loads =  lapply(as_list, varimax)

@@ -1,7 +1,4 @@
 #include <RcppArmadillo.h>
-#include <sstream>
-#include <iostream>
-#include <fstream>
 #include<omp.h>
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::plugins(cpp17)]]
@@ -792,7 +789,7 @@ double fast_fact_det(const arma::mat &Lambda_orig,const arma::vec &ps, const boo
     del_inv_S.set_size(p,p,nstudy);
     // Rcpp::Rcout<<"del_v_msfa flag loop "<<endl;
     
-    // omp_set_num_threads(1);
+    omp_set_num_threads(1);
 #pragma omp parallel for num_threads(nstudy)
     for(unsigned s=0;s<nstudy;++s){
       // cout<<"del_v_msfa flag s= "<<s<<endl;
@@ -832,7 +829,7 @@ double fast_fact_det(const arma::mat &Lambda_orig,const arma::vec &ps, const boo
      
      tmpmat.slice(s)*=tmpmat2.slice(s);
      }*/
-    // omp_set_num_threads(nthreads);
+    omp_set_num_threads(nthreads);
     // Rcpp::Rcout<<"del_v_msfa flag 1 "<<endl;
     
     grads.Phi=param.Phi % hypers.Phi;
@@ -901,8 +898,6 @@ double fast_fact_det(const arma::mat &Lambda_orig,const arma::vec &ps, const boo
 //'
 //' @return If \code{lg=TRUE} then \code{log}-determinant of \code{X}; else determinant of \code{X}
 //' @export
-//'
-//' @examples
 // [[Rcpp::export]]
 double log_det_pd(const arma::mat &X, const bool lg=1){
   // (X.diag().t()).print("X.diag()");
@@ -1378,13 +1373,12 @@ double log_det_pd(const arma::mat &X, const bool lg=1){
       H_ll_new =  accu(square(params_new.ps-hyper.ps(0) ))/(2*hyper.ps(1)) ;
       double Hvec=0;
       vec tmp_exp=exp(params_new.ps);
-      /*omp_set_num_threads(1);
-#pragma omp parallel for num_threads(nthreads) reduction(+:Hvec)*/
-#pragma omp parallel for reduction(+:Hvec)
+      omp_set_num_threads(1);
+#pragma omp parallel for num_threads(nthreads) reduction(+:Hvec)
       for(unsigned j=0;j<nstudy;++j)
         Hvec+= ( ns(j) *fast_fact_det(Phi_sq_As[j],tmp_exp)+ trace(del_inv_S.slice(j) )
                    + accu(square(params_new.A[j]-hyper.A(0) ) )/hyper.A(1) ) ;
-      // omp_set_num_threads(nthreads);
+      omp_set_num_threads(nthreads);
       H_ll_new+=( Hvec/2.0 );
       
       double H_new= H_ll_new+ H_prior_new+ theta_ssq(p_lam) /2, H_old=H_ll_old+H_prior_old+kin_energy;

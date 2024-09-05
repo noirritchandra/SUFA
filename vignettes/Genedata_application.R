@@ -88,14 +88,14 @@ sd.median=median( sapply(Y_cent, function(y) apply(y,2,sd)))
 Y_cent_scaled=lapply(Y_cent, "/",   sd.median)
 
 ## ----fit_SUFA, message=FALSE, results=FALSE, warning=FALSE, comment=FALSE-----
-res.sufa<-fit_SUFA(Y_cent_scaled,qmax=25,nthreads = 6,nrun = 7.5e3,
-                                     nleapfrog = 4, leapmax = 9, del_range = c(0,.01))
+res.sufa<-fit_SUFA(Y_cent_scaled,qmax=25,nthreads = 3,nrun = 7.5e3,
+                                     nleapfrog = 4, leapmax = 9, del_range = c(0.001,.009))
 
 ## ----set_burnin---------------------------------------------------------------
 burn=500
 
 ## ----wbic---------------------------------------------------------------------
-WBIC(res.sufa ,Y_cent_scaled, model="SUFA",burn=5e2,ncores=1)
+WBIC(res.sufa ,Y_cent_scaled, model="SUFA",burn=burn,ncores=1)
 
 ## ----get_cormat---------------------------------------------------------------
 phis=apply(res.sufa$Lambda[,,-(1:burn)],3,identity, simplify = F)
@@ -103,7 +103,7 @@ diags=apply(res.sufa$residuals[-(1:burn),],1,identity, simplify = F)
 
 cormats=abind::abind( mapply(function(phi, ps) cov2cor( tcrossprod(phi)+diag(ps)) 
                              ,phis,diags, SIMPLIFY = F),along = 3 )
-cormat_mean=apply(cormats, c(1, 2), mean)
+cormat_mean=  apply(cormats, c(1, 2), mean)
 
 alpha=.05
 low = apply(cormats, c(1, 2), quantile, alpha/2)
