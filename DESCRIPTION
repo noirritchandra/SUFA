@@ -1,7 +1,7 @@
 Package: SUFA
 Type: Package
 Title: SUbspace Factor Analysis Model
-Version: 2.0.0
+Version: 2.0.1
 Date: 2023-10-17
 Author: Noirrit Kiran Chandra
 Encoding: UTF-8
@@ -19,4 +19,3 @@ Suggests:
 VignetteBuilder: knitr
 Depends: 
     R (>= 2.10)
-LazyData: true

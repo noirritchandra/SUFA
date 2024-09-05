@@ -1,3 +1,5 @@
+# SUFA 2.0.1
+
 # SUFA 2.0.0
 
 * Moved gene expression datasets to remote location. 
