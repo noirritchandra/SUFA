@@ -58,8 +58,6 @@ fast_fact_det <- function(Lambda_orig, ps, lg = 1L) {
 #'
 #' @return If \code{lg=TRUE} then \code{log}-determinant of \code{X}; else determinant of \code{X}
 #' @export
-#'
-#' @examples
 log_det_pd <- function(X, lg = 1L) {
     .Call(`_SUFA_log_det_pd`, X, lg)
 }

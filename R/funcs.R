@@ -316,17 +316,14 @@ lam.est=function(lam_array, burn=5e2,alpha=.05){
 #' }
 #' @export 
 lam.est.all=function(res, burn=5e2,alpha=.05){
-  # n.cores=round(n.cores)
-  # if(n.cores<1)
-  #   stop("n.cores<1")
   lam_array=res$Lambda[,,-(1:burn)]
-  A_lists=lapply(res$A,function(x,burn) x[,,-(1:burn)], burn=burn )
-
+  A_lists=lapply(res$A,function(x,burn) x[,,-(1:burn),drop=F], burn=burn )
+  
   var_loads =  apply(lam_array,3, varimax, simplify = F) ##MCMC samples MUST be stored across the third dimension
-
+  
   loads=lapply(var_loads, '[[',1) #the loading matrices following varimax
   rots=lapply(var_loads, '[[',2) #the varimax rotation matrix
-
+  
   ######obtaining summary of the shared loading
   norms = sapply(loads, norm, "2")
   pivot = loads[order(norms)][[median(1:length(norms))]] #we use the same pivot later
@@ -335,10 +332,10 @@ lam.est.all=function(res, burn=5e2,alpha=.05){
   lam.est<-infinitefactor::summat(aligned,alpha=alpha)
   lam.est=lam.est[,order(colSums( lam.est^2),decreasing = T)]
   ############
-
+  
   ######obtaining summary of the study-specific loadings
   rotmats=mapply("%*%",rots, align_mats,SIMPLIFY = F)
-
+  
   library(doParallel)
   # cl <- makeCluster(min(n.cores,length(res$A)), type="FORK")
   # registerDoParallel(cl)
@@ -347,19 +344,19 @@ lam.est.all=function(res, burn=5e2,alpha=.05){
                                 a=apply(A,3,identity,simplify = F)
                                 as_list=mapply(crossprod, rotmats, a,SIMPLIFY = F)
                                 var_loads =  lapply(as_list, varimax)
-                                loads=lapply(var_loads, '[[',1) #the loading matrices following varimax
+                                if(ncol(A)==1)
+                                  loads=var_loads else loads=lapply(var_loads, '[[',1) #the loading matrices following varimax #the loading matrices following varimax
                                 # rots=lapply(var_loads, '[[',2) #the varimax rotation matrix
-
+                                
                                 pivot = loads[order(norms)][[median(1:length(norms))]]
                                 aligned_s = lapply(loads, infinitefactor::msf, pivot)
                                 aligned_lam_as =mapply("%*%", aligned,  aligned_s,SIMPLIFY = F)
                                 lam_as.est<- infinitefactor::summat(aligned_lam_as,alpha=alpha)
-                                lam_as.est[,order(colSums( lam_as.est^2),decreasing = T)]
+                                lam_as.est[,order(colSums( lam_as.est^2),decreasing = T),drop=F]
                               }
   # stopCluster(cl)
   list(Shared=lam.est, Study_specific=A_lists_lam_aligned)
 }
-
 
 #############Estimating latent factors
 get_latent_factors=function(res, Y, burn=500){
@@ -393,8 +390,9 @@ get_latent_factors=function(res, Y, burn=500){
 
 #' Fit the SUFA model
 #'
-#' @param Y List of datasets. In each dataset independent samples MUST be stored along the rows. All of the datasets MUST comprise the same features.
+#' @param Y A List of datasets. In each dataset independent samples MUST be stored along the rows. All of the datasets MUST comprise the same features.
 #' @param qmax Maximum allowed column dimension of the shared factor loading matrix.
+#' @param qs Vector of the number of study-specific latent factors. Default is \code{NULL} where the script will set \eqn{q_{s}=\frac{q}{S}} for all studies \eqn{s=1,\dots,S}.
 #' @param a Dirichlet-Laplace shrinkage parameter.
 #' @param bAs Prior variance hyperparameter of the elements in the study-specific \eqn{\mathbf{A}_{s}} matrices.
 #' @param ms Prior expectation of the idiosyncratic variance parameters \eqn{\delta_{j}^{2}}'s for all \eqn{j=1,\dots,d}.
@@ -417,23 +415,30 @@ get_latent_factors=function(res, Y, burn=500){
 #' @export
 #' @examples
 #' vignette(topic="Intro_simulation",package = "SUFA")
-fit_SUFA=function(Y,qmax,a=0.5, bAs=1, ms=1,ss=7, nthreads=6,
-                   nrun=7.5e3, thin=5,
+fit_SUFA=function(Y,qmax,qs=NULL, a=0.5, bAs=1, ms=1,ss=7, nthreads=6,
+                  nrun=7.5e3, thin=5,
                   nleapfrog=6,leapmax=10,del_range=c(.001,.0075),col_prop=1){
-
+  
   Y_comb=Reduce(rbind,Y)
   p=ncol(Y_comb)
   init.vals=spca(Y_comb, pr=.95,nv=qmax)
   d_est=ncol(init.vals$lambda)
   nstudy=length(Y)
-  ds_est= rep(floor(d_est/nstudy) ,nstudy)  #sapply(res$l,ncol)
+  if(is.null(qs))
+    ds_est= rep( max(floor(d_est/nstudy),1) ,nstudy)  else{
+      if(length(qs)!=length(Y))
+        stop("length(qs) not equal to the number of datasets!")
+      if( sum(qs)>  d_est)
+        warning("Identifiability condition for `infomration switching` not statisfied!")
+      ds_est=qs
+    } 
   Phi.init=init.vals$lambda
   #################################################
-
+  
   RcppArmadillo::armadillo_set_number_of_omp_threads(nthreads);
   SUFA_HMC(nrun=nrun, thin=thin, nleapfrog=nleapfrog,del_range=del_range,
-                                      ps_hyper=c(ms,ss),  A_hyper=c(0,bAs), a=a,
-                                      Y, ks = ds_est, Phi.init,leapmax=leapmax,leapmin=5,col_prob=col_prop ,nthreads = min(nstudy,nthreads) )
+           ps_hyper=c(ms,ss),  A_hyper=c(0,bAs), a=a,
+           Y, ks = ds_est, Phi.init,leapmax=leapmax,leapmin=5,col_prob=col_prop ,nthreads = min(nstudy,nthreads) )
 }
 
 #' Fit a Bayesian sparse factor analysis model

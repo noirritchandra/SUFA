@@ -1,3 +1,9 @@
+# SUFA 2.2.0
+
+-    `las.est.all` function can now handle cases with study-specific loading matrices having single columns.
+
+-   Number of study-specific factors can also be manually set in `fit_SUFA` function.
+
 # SUFA 2.1.0
 
 -   Improved `omp` optimization.

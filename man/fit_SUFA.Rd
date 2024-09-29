@@ -7,6 +7,7 @@
 fit_SUFA(
   Y,
   qmax,
+  qs = NULL,
   a = 0.5,
   bAs = 1,
   ms = 1,
@@ -21,9 +22,11 @@ fit_SUFA(
 )
 }
 \arguments{
-\item{Y}{List of datasets. In each dataset independent samples MUST be stored along the rows. All of the datasets MUST comprise the same features.}
+\item{Y}{A List of datasets. In each dataset independent samples MUST be stored along the rows. All of the datasets MUST comprise the same features.}
 
 \item{qmax}{Maximum allowed column dimension of the shared factor loading matrix.}
+
+\item{qs}{Vector of the number of study-specific latent factors. Default is \code{NULL} where the script will set \eqn{q_{s}=\frac{q}{S}} for all studies \eqn{s=1,\dots,S}.}
 
 \item{a}{Dirichlet-Laplace shrinkage parameter.}
 
